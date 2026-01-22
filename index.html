@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Healthcare Access & Throughput Engine</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f9; padding: 20px; color: #333; }
+        .dashboard { background: white; max-width: 900px; margin: 30px auto; padding: 35px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border-top: 8px solid #002278; }
+        h2 { color: #002278; margin-top: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .subtitle { color: #666; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; background: #f8f9fa; padding: 25px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #d1d9e0; }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-size: 0.85rem; font-weight: 700; color: #444; margin-bottom: 8px; }
+        input { padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
+        input:focus { border-color: #002278; outline: none; }
+        .btn { background: #fa4616; color: white; border: none; padding: 15px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 1.1rem; width: 100%; margin-top: 10px; transition: 0.2s; }
+        .btn:hover { background: #d03a12; transform: translateY(-1px); }
+        .impact-card { background: #e7f3ff; padding: 20px; border-radius: 8px; border-left: 5px solid #002278; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f1f4f8; color: #002278; padding: 15px; text-align: left; border-bottom: 3px solid #dee2e6; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 1.05rem; }
+        .highlight { font-weight: bold; color: #fa4616; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h2>🏥 Healthcare Access & Throughput Engine</h2>
+    <p class="subtitle">Operational Modeling for Clinical Mission Sustainability</p>
+    
+    <div class="controls">
+        <div class="input-group">
+            <label>Avg. Length of Stay (Days)</label>
+            <input type="number" id="los" value="5.2" step="0.1">
+        </div>
+        <div class="input-group">
+            <label>Total Staffed Beds</label>
+            <input type="number" id="beds" value="25">
+        </div>
+        <div class="input-group">
+            <label>Target Occupancy (%)</label>
+            <input type="number" id="occupancy" value="85">
+        </div>
+        <div class="input-group">
+            <label>Monthly Referrals</label>
+            <input type="number" id="referrals" value="150">
+        </div>
+        <button class="btn" onclick="calculate()">RUN OPERATIONS ANALYSIS</button>
+    </div>
+
+    <div class="impact-card" id="impact-summary">
+        </div>
+
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>Operational Metric</th>
+                <th>Current Performance</th>
+                <th>Efficiency Goal (-0.5 Day LOS)</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+function calculate() {
+    const los = parseFloat(document.getElementById('los').value);
+    const beds = parseFloat(document.getElementById('beds').value);
+    const targetOcc = parseFloat(document.getElementById('occupancy').value) / 100;
+    const referrals = parseFloat(document.getElementById('referrals').value);
+    
+    // Effective capacity based on target occupancy (hospitals rarely want 100% to leave room for ED admits)
+    const effectiveBeds = beds * targetOcc;
+    const monthlyCapacity = (effectiveBeds * 30.4) / los;
+    
+    const goalLos = Math.max(0.5, los - 0.5);
+    const goalCapacity = (effectiveBeds * 30.4) / goalLos;
+    const additionalPatients = goalCapacity - monthlyCapacity;
+
+    document.getElementById('impact-summary').innerHTML = `
+        <strong>Impact Analysis:</strong> By reducing the average stay by just 0.5 days, the department expands access for 
+        <span class="highlight">${Math.round(additionalPatients)} additional patients</span> per month while maintaining the same bed count.
+    `;
+
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = `
+        <tr>
+            <td><b>Monthly Patient Throughput</b></td>
+            <td>${Math.round(monthlyCapacity)} patients</td>
+            <td>${Math.round(goalCapacity)} patients</td>
+        </tr>
+        <tr>
+            <td><b>Annual Patient Access</b></td>
+            <td>${Math.round(monthlyCapacity * 12).toLocaleString()}</td>
+            <td>${Math.round(goalCapacity * 12).toLocaleString()}</td>
+        </tr>
+        <tr>
+            <td><b>Bed Turnover Rate (Monthly)</b></td>
+            <td>${(monthlyCapacity / beds).toFixed(2)}</td>
+            <td>${(goalCapacity / beds).toFixed(2)}</td>
+        </tr>
+    `;
+}
+window.onload = calculate;
+</script>
+
+</body>
+</html>
